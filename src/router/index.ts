@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import { useAuthStore } from '../store/auth';
+import { useAuthStore } from '../store/auth.store';
 
 const routes = [
   {
@@ -11,6 +11,11 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: () => import('../views/Login.vue'),
+  },
+  {
+    path: '/game',
+    name: 'Game',
+    component: () => import('../views/Game.vue')
   },
   {
     path: '/dashboard',

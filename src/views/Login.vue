@@ -17,7 +17,7 @@
 
 <script lang="ts">
 import {ref} from "vue";
-import {useAuthStore} from "../store/auth";
+import { useAuthStore } from "../store/auth.store";
 import router from "../router";
 
 export default {
@@ -51,3 +51,4 @@ export default {
 	},
 };
 </script>
+../store/auth.store
