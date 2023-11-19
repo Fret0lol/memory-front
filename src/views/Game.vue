@@ -1,11 +1,15 @@
 <script lang="ts" setup>
 import {Ref, onMounted, ref, watch} from "vue";
-import Card from '../components/Card.vue'
+import Card from "../components/Card.vue";
+import {useGameStore} from "../store/game.store";
 
+const {level} = useGameStore();
 const cards: Ref<string[]> = ref([]);
 const selectedCards: Ref<number[]> = ref([]);
 const foundedCards: Ref<number[]> = ref([]);
-const level = 6;
+const timer: Ref<number> = ref(0);
+const allTilesFound: Ref<boolean> = ref(false);
+const gameStarted: Ref<boolean> = ref(false);
 
 const emojiArray: string[] = ["😀", "🎉", "💖", "🎩", "🐶", "🐱", "🦄", "🐬", "🌍", "🌛", "🌞", "💫", "🍎", "🍌", "🍓", "🍐", "🍟", "🍿"];
 
@@ -29,6 +33,11 @@ function generateCards(level: number): string[] {
 const selectCard = (cardIndex: number) => {
 	let newSelectedCards: number[] = [];
 
+	if (!gameStarted.value) {
+		gameStarted.value = true;
+		startTimer();
+	}
+
 	if (selectedCards.value.length < 2 && !selectedCards.value.includes(cardIndex)) {
 		newSelectedCards = [...selectedCards.value, cardIndex];
 		selectedCards.value = newSelectedCards;
@@ -45,17 +54,45 @@ const selectCard = (cardIndex: number) => {
 
 		setTimeout(() => {
 			selectedCards.value = [];
+
+			if (foundedCards.value.length === cards.value.length) {
+				stopTimer();
+			}
 		}, 500);
 	}
+};
+
+const startTimer = (): void => {
+	const interval = setInterval(() => {
+		timer.value++;
+	}, 1);
+
+	watch(allTilesFound, () => {
+		clearInterval(interval);
+	});
+};
+
+const stopTimer = (): void => {
+	allTilesFound.value = true;
+};
+
+const formatTimer = (time: number): string => {
+	const minutes = Math.floor(time / 60000);
+	const seconds = Math.floor(time / 1000);
+	const milliseconds = (time % 1000).toString().padStart(3, "0");
+	return `${minutes}:${seconds}.${milliseconds}`;
 };
 
 onMounted(() => {
 	cards.value = generateCards(level);
 });
 
-watch(() => level, () => {
-  cards.value = generateCards(level)
-})
+watch(
+	() => level,
+	() => {
+		cards.value = generateCards(level);
+	}
+);
 </script>
 <template>
 	<div class="card-container" :style="{gridTemplateColumns: `repeat(${level}, 1fr)`, gridTemplateRows: `repeat(${level}, 1fr)`}">
@@ -64,11 +101,13 @@ watch(() => level, () => {
 			:key="index"
 			:selected="selectedCards.includes(index)"
 			:finded="foundedCards.includes(index)"
-			@click="() => selectCard(index)"
+			@click="!foundedCards.includes(index) ? selectCard(index) : null"
 		>
 			{{ value }}
 		</Card>
 	</div>
+	<div v-if="!allTilesFound">Timer: {{ formatTimer(timer) }}</div>
+	<div v-else>Game Over! You found all tiles in {{ formatTimer(timer) }} seconds.</div>
 </template>
 <style lang="scss">
 .card-container {
@@ -76,6 +115,6 @@ watch(() => level, () => {
 	height: 100%;
 	display: grid;
 	gap: 8px;
-  user-select: none;
+	user-select: none;
 }
 </style>
